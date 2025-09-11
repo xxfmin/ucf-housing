@@ -1,0 +1,100 @@
+# Ignore everything at the root level
+*
+
+# Include only the backend directory
+!backend/
+
+# Include basic project files (optional - remove if you don't want them)
+!README.md
+!.gitignore
+
+# =======================================
+# Backend-specific ignores
+# =======================================
+
+# Maven
+backend/target/
+backend/pom.xml.tag
+backend/pom.xml.releaseBackup
+backend/pom.xml.versionsBackup
+backend/pom.xml.next
+backend/release.properties
+backend/dependency-reduced-pom.xml
+backend/buildNumber.properties
+backend/.mvn/timing.properties
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# IDE files
+backend/.idea/
+backend/*.iws
+backend/*.iml
+backend/*.ipr
+backend/.vscode/
+backend/.settings/
+backend/.project
+backend/.classpath
+backend/.factorypath
+
+# OS files
+backend/.DS_Store
+backend/.DS_Store?
+backend/._*
+backend/.Spotlight-V100
+backend/.Trashes
+backend/ehthumbs.db
+backend/Thumbs.db
+
+# Logs
+backend/logs/
+backend/*.log
+backend/log/
+
+# Runtime data
+backend/pids
+backend/*.pid
+backend/*.seed
+
+# Spring Boot
+backend/spring-boot-*.log
+backend/.attach_pid*
+
+# Application-specific
+backend/application-local.properties
+backend/application-secret.properties
+
+# Database
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+
+# Environment variables
+backend/.env
+backend/.env.local
+backend/.env.*.local
+
+# Temporary files
+backend/tmp/
+backend/temp/
+backend/*.tmp
+backend/*.temp
+backend/*.swp
+backend/*.swo
+backend/*~
+
+# Build artifacts
+backend/build/
+backend/out/
+backend/dist/
+
+# Package Files
+backend/*.jar
+backend/*.war
+backend/*.nar
+backend/*.ear
+backend/*.zip
+backend/*.tar.gz
+backend/*.rar
+
+# JVM Crash logs
+backend/hs_err_pid*
+backend/replay_pid*
