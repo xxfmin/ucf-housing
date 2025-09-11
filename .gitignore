@@ -1,18 +1,19 @@
 # Ignore everything at the root level
 *
 
-# Include only the backend directory
+# Include the backend directory and ALL its contents
 !backend/
+!backend/**
 
-# Include basic project files (optional - remove if you don't want them)
+# Include basic project files (optional)
 !README.md
 !.gitignore
 
 # =======================================
-# Backend-specific ignores
+# Now apply backend-specific ignores
 # =======================================
 
-# Maven
+# Maven build artifacts
 backend/target/
 backend/pom.xml.tag
 backend/pom.xml.releaseBackup
@@ -49,25 +50,13 @@ backend/logs/
 backend/*.log
 backend/log/
 
-# Runtime data
-backend/pids
-backend/*.pid
-backend/*.seed
-
-# Spring Boot
+# Spring Boot specific
 backend/spring-boot-*.log
 backend/.attach_pid*
 
-# Application-specific
+# Environment and secrets
 backend/application-local.properties
 backend/application-secret.properties
-
-# Database
-backend/*.db
-backend/*.sqlite
-backend/*.sqlite3
-
-# Environment variables
 backend/.env
 backend/.env.local
 backend/.env.*.local
@@ -81,12 +70,12 @@ backend/*.swp
 backend/*.swo
 backend/*~
 
-# Build artifacts
+# Build artifacts (but keep source)
 backend/build/
 backend/out/
 backend/dist/
 
-# Package Files
+# Compiled artifacts
 backend/*.jar
 backend/*.war
 backend/*.nar
@@ -95,6 +84,14 @@ backend/*.zip
 backend/*.tar.gz
 backend/*.rar
 
-# JVM Crash logs
+# Runtime files
 backend/hs_err_pid*
 backend/replay_pid*
+backend/pids
+backend/*.pid
+backend/*.seed
+
+# Database files (if any local DB files)
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
