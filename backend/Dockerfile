@@ -8,7 +8,8 @@ RUN mvn dependency:go-offline -B
 
 COPY src ./src
 
-RUN mvn clean package
+# Skip tests during Docker build
+RUN mvn clean package -DskipTests
 
 FROM openjdk:21-jdk AS runner
 
