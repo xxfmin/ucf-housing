@@ -1,5 +1,6 @@
 package com.pm.backend.controller;
 
+import com.pm.backend.dto.UserResponseDTO;
 import com.pm.backend.model.User;
 import com.pm.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -21,15 +22,24 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<User> authenticatedUser() {
+    public ResponseEntity<UserResponseDTO> authenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(currentUser);
+
+        UserResponseDTO userResponseDTO = new UserResponseDTO();
+        userResponseDTO.setId(currentUser.getId());
+        userResponseDTO.setUsername(currentUser.getUsername());
+        userResponseDTO.setEmail(currentUser.getEmail());
+        userResponseDTO.setEnabled(currentUser.isEnabled());
+        userResponseDTO.setCreatedAt(currentUser.getCreatedAt());
+        userResponseDTO.setUpdatedAt(currentUser.getUpdatedAt());
+
+        return ResponseEntity.ok(userResponseDTO);
     }
 
     @GetMapping("/")
     public ResponseEntity<List<User>> allUsers() {
-        List <User> users = userService.allUsers();
+        List<User> users = userService.allUsers();
         return ResponseEntity.ok(users);
     }
 }

@@ -8,6 +8,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import com.pm.backend.model.User;
 
 import java.security.Key;
 import java.util.Date;
@@ -45,10 +46,16 @@ public class JWTService {
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, Long expirationTime) {
+        // Cast to User to access email field
+        String subject = userDetails.getUsername(); // This will be the email for User objects
+        if (userDetails instanceof User) {
+            subject = ((User) userDetails).getEmail(); // Use email instead of username
+        }
+        
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(subject) // Store email as subject
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -57,7 +64,12 @@ public class JWTService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        // Compare with email for User objects
+        String userIdentifier = userDetails.getUsername();
+        if (userDetails instanceof User) {
+            userIdentifier = ((User) userDetails).getEmail();
+        }
+        return (username.equals(userIdentifier) && !isTokenExpired(token));
     }
 
     private boolean isTokenExpired(String token) {
