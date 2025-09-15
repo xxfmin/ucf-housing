@@ -1,5 +1,6 @@
 package com.pm.backend.service;
 
+import com.pm.backend.dto.ListingFilterCriteriaDTO;
 import com.pm.backend.dto.ListingRequestDTO;
 import com.pm.backend.dto.ListingResponseDTO;
 import com.pm.backend.exception.AddressAlreadyExistsException;
@@ -8,12 +9,14 @@ import com.pm.backend.exception.ZpidAlreadyExistsException;
 import com.pm.backend.mapper.ListingMapper;
 import com.pm.backend.model.Listing;
 import com.pm.backend.repository.ListingRepository;
+import com.pm.backend.specification.ListingSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +76,53 @@ public class ListingService {
             case "updatedat" -> "updatedAt";
             default -> "zpid"; // Default sort by zpid
         };
+    }
+
+    // New method: Get filtered listings without pagination
+    public List<ListingResponseDTO> getFilteredListings(ListingFilterCriteriaDTO filters) {
+        List<Listing> listings;
+        
+        if (filters.hasFilters()) {
+            Specification<Listing> spec = ListingSpecification.withFilters(filters);
+            listings = listingRepository.findAll(spec);
+            logger.info("Found {} listings with applied filters", listings.size());
+        } else {
+            listings = listingRepository.findAll();
+            logger.info("Found {} listings without filters", listings.size());
+        }
+        
+        return ListingMapper.toDTOList(listings);
+    }
+
+    // New method: Get filtered listings with pagination
+    public Page<ListingResponseDTO> getFilteredListings(int page, int size, String sortBy, String sortDir, ListingFilterCriteriaDTO filters) {
+        // Validate pagination parameters
+        if (page < 0) page = 0;
+        if (size <= 0 || size > 100) size = 20; // Max 100 per page to prevent abuse
+        
+        // Validate sortBy field to prevent injection
+        String validSortBy = validateSortField(sortBy);
+        
+        // Create sort object
+        Sort.Direction direction = "DESC".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, validSortBy);
+        
+        // Create pageable object
+        Pageable pageable = PageRequest.of(page, size, sort);
+        
+        // Get filtered and paginated results
+        Page<Listing> listingPage;
+        if (filters.hasFilters()) {
+            Specification<Listing> spec = ListingSpecification.withFilters(filters);
+            listingPage = listingRepository.findAll(spec, pageable);
+            logger.info("Found {} listings on page {} with applied filters", listingPage.getContent().size(), page);
+        } else {
+            listingPage = listingRepository.findAll(pageable);
+            logger.info("Found {} listings on page {} without filters", listingPage.getContent().size(), page);
+        }
+        
+        // Convert to DTO page
+        return listingPage.map(ListingMapper::toDTO);
     }
 
     public Optional<ListingResponseDTO> getListing(String zpid) {

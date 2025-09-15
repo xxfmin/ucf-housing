@@ -1,5 +1,6 @@
 package com.pm.backend.controller;
 
+import com.pm.backend.dto.ListingFilterCriteriaDTO;
 import com.pm.backend.dto.ListingRequestDTO;
 import com.pm.backend.dto.ListingResponseDTO;
 import com.pm.backend.service.ListingService;
@@ -10,6 +11,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,22 +31,65 @@ public class ListingController {
 
     @GetMapping
     public ResponseEntity<?> getListings(
+            // Pagination and sorting
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(defaultValue = "zpid") String sortBy,
-            @RequestParam(defaultValue = "ASC") String sortDir) {
-        
-        // If pagination parameters are provided, return paginated result
-        if (page != null || size != null) {
-            int pageNum = page != null ? page : 0;
-            int pageSize = size != null ? size : 20;
+            @RequestParam(defaultValue = "ASC") String sortDir,
             
-            Page<ListingResponseDTO> paginatedListings = listingService.getListings(pageNum, pageSize, sortBy, sortDir);
-            return ResponseEntity.ok(paginatedListings);
-        } else {
-            // For backward compatibility, return all listings if no pagination params
-            List<ListingResponseDTO> listings = listingService.getListings();
-            return ResponseEntity.ok(listings);
+            // Filter parameters
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Integer minArea,
+            @RequestParam(required = false) Integer maxArea,
+            @RequestParam(required = false) List<String> cities,
+            @RequestParam(required = false) List<String> zipCodes,
+            @RequestParam(required = false) Integer beds,
+            @RequestParam(required = false) Integer baths,
+            @RequestParam(required = false) String availableBy) {
+        
+        try {
+            // Create filter criteria
+            ListingFilterCriteriaDTO filters = new ListingFilterCriteriaDTO();
+            filters.setMinPrice(minPrice);
+            filters.setMaxPrice(maxPrice);
+            filters.setMinArea(minArea);
+            filters.setMaxArea(maxArea);
+            filters.setCities(cities);
+            filters.setZipCodes(zipCodes);
+            filters.setBeds(beds);
+            filters.setBaths(baths);
+            
+            // Parse availability date if provided
+            if (availableBy != null && !availableBy.trim().isEmpty()) {
+                try {
+                    LocalDateTime availabilityDate = LocalDateTime.parse(availableBy, DateTimeFormatter.ISO_DATE_TIME);
+                    filters.setAvailableBy(availabilityDate);
+                } catch (DateTimeParseException e) {
+                    logger.warn("Invalid date format for availableBy parameter: {}", availableBy);
+                    return ResponseEntity.badRequest().body("Invalid date format for availableBy parameter. Use ISO format (e.g., 2024-12-31T00:00:00)");
+                }
+            }
+
+            logger.info("Fetching listings with filters: {}", filters);
+
+            // If pagination parameters are provided, return paginated result
+            if (page != null || size != null) {
+                int pageNum = page != null ? page : 0;
+                int pageSize = size != null ? size : 20;
+                
+                Page<ListingResponseDTO> paginatedListings = listingService.getFilteredListings(
+                    pageNum, pageSize, sortBy, sortDir, filters);
+                return ResponseEntity.ok(paginatedListings);
+            } else {
+                // For backward compatibility, return all listings (filtered if filters provided)
+                List<ListingResponseDTO> listings = listingService.getFilteredListings(filters);
+                return ResponseEntity.ok(listings);
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error fetching listings", e);
+            return ResponseEntity.internalServerError().body("Error fetching listings: " + e.getMessage());
         }
     }
 
